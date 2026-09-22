@@ -15,6 +15,8 @@ _TEMPLATE = Template(
     "Risk rating: {{ risk_rating }} ({{ risk_score }}/100)"
     "{% if risk_source == 'typesafe-jev' %}"
     " [via TypeSafe Jev, confidence {{ risk_confidence }}]"
+    "{% elif risk_source == 'typesafe-jev-via-vercel-gateway' %}"
+    " [via TypeSafe Jev (Vercel AI Gateway), confidence {{ risk_confidence }}]"
     "{% endif %}\n"
     "\n"
     "Recommendation: {{ recommendation }}\n"

@@ -82,22 +82,37 @@ That's a precise fit for `risk-analysis-agent`'s one actual judgment call
 `report-writer-agent`'s prose stays Jinja2. See
 `agents/risk_analysis_agent/typesafe_jev.py`.
 
-**To enable it:**
+**To enable it, either:**
 
-1. Sign up at [console.typesafe.ai](https://console.typesafe.ai) and
-   generate an API key (paid - see [typesafe.ai](https://typesafe.ai) for
-   current pricing; not free like the rest of this demo).
-2. `pip install -r requirements.txt` (already includes `typesafe-sdk`).
-3. Set the key before starting the backend:
+- Sign up at [console.typesafe.ai](https://console.typesafe.ai) and set
+  `TYPESAFE_API_KEY` - calls TypeSafe directly, or
+- Use a [Vercel AI Gateway](https://vercel.com/docs/ai-gateway) key and set
+  `AI_GATEWAY_API_KEY` instead - the identical `typesafe-sdk` request/response
+  shape, routed through `https://ai-gateway.vercel.sh/typesafe` and billed
+  through Vercel. Handy if TypeSafe's own signup isn't available. **Vercel AI
+  Gateway requires a credit card on file on your account** before it will
+  serve any request, even free-credit ones - add one at
+  [vercel.com/.../ai?modal=add-credit-card](https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%3Fmodal%3Dadd-credit-card)
+  if you see a 403 `credit card on file` error.
+
+Either way:
+
+1. `pip install -r requirements.txt` (already includes `typesafe-sdk`).
+2. Set the key before starting the backend:
    ```powershell
-   $env:TYPESAFE_API_KEY = "..."
+   $env:TYPESAFE_API_KEY = "..."      # direct, or
+   $env:AI_GATEWAY_API_KEY = "vck_..." # via Vercel AI Gateway
    ```
 
-Without a key (the default), `classify_risk` uses the original deterministic
-formula - identical behavior to before this integration existed, including
-if the key is present but invalid or the API call fails for any reason (it
-falls back rather than erroring the request). When Jev *is* used, the report
-shows it: `Risk rating: Medium (52/100) [via TypeSafe Jev, confidence 0.87]`.
+If `TYPESAFE_API_KEY` is set it takes priority; `AI_GATEWAY_API_KEY` is only
+used as a fallback. Without either (the default), `classify_risk` uses the
+original deterministic formula - identical behavior to before this
+integration existed - including if a key is present but invalid, unbilled
+(e.g. the Vercel credit-card requirement above), or the API call fails for
+any other reason: it falls back rather than erroring the request. When Jev
+*is* used, the report shows it and which path served the request:
+`Risk rating: Medium (52/100) [via TypeSafe Jev, confidence 0.87]` (direct)
+or `[via TypeSafe Jev (Vercel AI Gateway), confidence 0.87]` (gateway).
 
 ## Architecture
 
@@ -182,8 +197,10 @@ cd ..
 $env:ANTHROPIC_API_KEY = "sk-ant-..."
 
 # risk-analysis-agent's risk classification uses a real TypeSafe Jev decision
-# instead of a deterministic formula (see console.typesafe.ai - paid, not free)
-$env:TYPESAFE_API_KEY = "..."
+# instead of a deterministic formula - either one (see "TypeSafe Jev
+# integration" above; both are paid, not free)
+$env:TYPESAFE_API_KEY = "..."      # direct via console.typesafe.ai, or
+$env:AI_GATEWAY_API_KEY = "vck_..." # via Vercel AI Gateway
 ```
 
 Neither is required — both default to a clearly-labeled non-LLM fallback.

@@ -61,7 +61,7 @@ async def classify_risk(state: RiskState) -> dict:
     volatility_pct = state["volatility_pct"]
     max_drawdown_pct = state["max_drawdown_pct"]
 
-    if os.environ.get("TYPESAFE_API_KEY"):
+    if os.environ.get("TYPESAFE_API_KEY") or os.environ.get("AI_GATEWAY_API_KEY"):
         try:
             from .typesafe_jev import classify_with_jev
 
