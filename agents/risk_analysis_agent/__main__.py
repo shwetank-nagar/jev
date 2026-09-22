@@ -16,8 +16,10 @@ def build_agent_card() -> AgentCard:
     return AgentCard(
         name="risk-analysis-agent",
         description=(
-            "LangGraph-based agent computing deterministic volatility, "
-            "max drawdown, and a 0-100 risk score/rating from a price history."
+            "LangGraph-based agent computing volatility and max drawdown from "
+            "a price history, then classifying overall risk (0-100 score + "
+            "rating) via a real TypeSafe Jev decision if TYPESAFE_API_KEY is "
+            "set, else a deterministic formula."
         ),
         version="0.1.0",
         supported_interfaces=[

@@ -21,6 +21,12 @@ question:
 A **React UI** ties it together: chat with any of the three, browse/register
 Agent Cards, and see the timing comparison as a chart.
 
+`risk-analysis-agent`'s one genuine judgment call - "is this Low/Medium/High
+risk?" - can also optionally be answered by a real
+[TypeSafe Jev](https://typesafe.ai) decision (its `Choice` + `Score`
+primitives) instead of a formula, if `TYPESAFE_API_KEY` is set; see
+[TypeSafe Jev integration](#typesafe-jev-integration) below.
+
 ## Why jev is faster
 
 Screenshot below (AAPL, this machine, see [Screenshots](#screenshots) for the
@@ -57,6 +63,41 @@ actually doing:
   so it's consistently a bit faster than `jev` (not orders of magnitude) —
   see the [jev-parallel screenshot](#screenshots) for a same-work, less-waiting
   comparison alongside the bigger architectural one.
+
+## TypeSafe Jev integration
+
+Not to be confused with this repo's own `jev` (an orchestrator we built and
+named after this project's folder) — [TypeSafe AI's Jev](https://typesafe.ai)
+is a real, separate commercial product: a "System One Model" for fast, typed
+decisions. Its API isn't a free-text chat model - you give it `state` (context)
+and named `questions`, each one of three primitives:
+
+- **Choice** - pick a named alternative (e.g. `Low` / `Medium` / `High`)
+- **Score** - rate against an ordered rubric
+- **Noul** - yes/no
+
+That's a precise fit for `risk-analysis-agent`'s one actual judgment call
+("classify this risk"), so that's the only place it's used -
+`compute_volatility` / `compute_drawdown` stay plain arithmetic, and
+`report-writer-agent`'s prose stays Jinja2. See
+`agents/risk_analysis_agent/typesafe_jev.py`.
+
+**To enable it:**
+
+1. Sign up at [console.typesafe.ai](https://console.typesafe.ai) and
+   generate an API key (paid - see [typesafe.ai](https://typesafe.ai) for
+   current pricing; not free like the rest of this demo).
+2. `pip install -r requirements.txt` (already includes `typesafe-sdk`).
+3. Set the key before starting the backend:
+   ```powershell
+   $env:TYPESAFE_API_KEY = "..."
+   ```
+
+Without a key (the default), `classify_risk` uses the original deterministic
+formula - identical behavior to before this integration existed, including
+if the key is present but invalid or the API call fails for any reason (it
+falls back rather than erroring the request). When Jev *is* used, the report
+shows it: `Risk rating: Medium (52/100) [via TypeSafe Jev, confidence 0.87]`.
 
 ## Architecture
 
@@ -105,7 +146,8 @@ frontend simple.
 common/                  shared registry, mock market data, message helpers, server bootstrap
 agents/
   market_data_agent/     mock price data — framework-free
-  risk_analysis_agent/   volatility/drawdown/risk scoring — LangGraph state graph
+  risk_analysis_agent/   volatility/drawdown/risk scoring — LangGraph state graph,
+                         with optional real classification via TypeSafe Jev
   report_writer_agent/   narrative report — Jinja2 template
   single_prompt_agent/   baseline: one model call (real via Anthropic Haiku, or simulated)
 orchestrator/            jev: A2A server + sequential A2A client to the 3 agents, + CLI
@@ -133,12 +175,18 @@ npm install
 cd ..
 ```
 
-**Optional** — to make the single-prompt baseline use a real model instead
-of a simulated delay, set an API key before starting the backend:
+**Optional** — set either or both before starting the backend:
 
 ```powershell
+# single-prompt baseline uses a real Claude Haiku call instead of a simulated delay
 $env:ANTHROPIC_API_KEY = "sk-ant-..."
+
+# risk-analysis-agent's risk classification uses a real TypeSafe Jev decision
+# instead of a deterministic formula (see console.typesafe.ai - paid, not free)
+$env:TYPESAFE_API_KEY = "..."
 ```
+
+Neither is required — both default to a clearly-labeled non-LLM fallback.
 
 ## Running the demo
 

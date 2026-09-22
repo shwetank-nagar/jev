@@ -42,7 +42,7 @@ class RiskAnalysisAgentExecutor(AgentExecutor):
             )
             return
 
-        result = analyze_risk(price_history)
+        result = await analyze_risk(price_history)
         await event_queue.enqueue_event(agent_reply(result))
 
     async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
